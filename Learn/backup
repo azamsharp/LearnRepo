@@ -1,0 +1,88 @@
+
+//
+//  ContentView.swift
+//  Learn
+//
+//  Created by Mohammad Azam on 7/14/22.
+//
+
+import SwiftUI
+
+class AppState: ObservableObject {
+    @Published var tweets: [Tweet] = [Tweet(text: "Tweet 1", like: false), Tweet(text: "Tweet 2", like: false)]
+}
+
+struct Tweet: Identifiable, Hashable {
+    
+    let text: String
+    var like: Bool
+    let id = UUID()
+    
+}
+
+extension Binding: Equatable where Value: Equatable {
+    public static func == (lhs: Binding<Value>, rhs: Binding<Value>) -> Bool {
+        return lhs.wrappedValue == rhs.wrappedValue
+    }
+}
+
+extension Binding: Hashable where Value: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        self.wrappedValue.hash(into: &hasher)
+    }
+}
+
+struct TweetDetailScreen: View {
+    
+    @Binding var tweet: Tweet
+    
+    var body: some View {
+        let _ = print(Self._printChanges())
+        VStack {
+            Text(tweet.like ? "like": "not like")
+            // How can I use the same TweetCellView and allow
+            // the user to update the tweet
+            // The following line will give error since tweet is meant to be
+            // passed as a Binding
+            TweetCellView(tweet: $tweet)
+                .navigationTitle("Tweet Detail")
+        }
+    }
+}
+
+struct ContentView: View {
+    
+    @EnvironmentObject var appState: AppState
+    
+    var body: some View {
+        List($appState.tweets) { tweet in
+            let _ = print(tweet)
+            NavigationLink(value: tweet) {
+                TweetCellView(tweet: tweet)
+            }
+        }
+    }
+}
+
+struct TweetCellView: View {
+    
+    @Binding var tweet: Tweet
+    
+    var body: some View {
+        let _ = print(Self._printChanges())
+        HStack {
+            Text(tweet.text)
+            Spacer()
+            Image(systemName: tweet.like ? "heart.fill": "heart")
+                .onTapGesture {
+                    tweet.like.toggle()
+                }
+        }
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView().environmentObject(AppState())
+    }
+}
